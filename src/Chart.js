@@ -8,15 +8,23 @@ export default class Chart extends React.Component {
         super(props);
         this.state = {
             data: [],
+            intervalId: 0,
         };
+        this.updateData = this.updateData.bind(this);
     }
     
-    async componentDidMount() {
-        const response = await fetch('http://routezjlizz04-workspaceccme5ifui0ekjbt1.apps.ocp3.lab.spodon.com/stocklevels');
+    async updateData() {
+        const response = await fetch('http://routezjlizz04-workspaceccme5ifui0ekjbt1.apps.ocp3.lab.spodon.com/api/v1/stocklevels');
         const data = await response.json();
   
-        console.log("data", data);
         this.setState({data: data});
+    }
+    
+    componentDidMount() {
+        this.updateData();
+        
+        var intervalId = setInterval(this.updateData,2000);
+        this.setState({intervalId: intervalId});
     }
 
     render() {
@@ -38,7 +46,7 @@ export default class Chart extends React.Component {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="value" fill="#8884d8" />
+                  <Bar dataKey="qty" fill="#8884d8" />
                 </BarChart>
               </ResponsiveContainer>
             </React.Fragment>
