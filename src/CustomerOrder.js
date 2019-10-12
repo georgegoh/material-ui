@@ -20,11 +20,15 @@ import NotificationsIcon from '@material-ui/icons/Notifications';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+import ListSubheader from '@material-ui/core/ListSubheader';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
+import PeopleIcon from '@material-ui/icons/People';
+import BarChartIcon from '@material-ui/icons/BarChart';
+import LayersIcon from '@material-ui/icons/Layers';
 import Chart from './Chart';
 import Deposits from './Deposits';
-import Orders from './Orders';
+import CreateOrder from './CreateOrder';
 import Stock from './Stock';
 
 function Copyright() {
@@ -121,7 +125,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-export default function Dashboard() {
+export default function CustomerOrder() {
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
   const handleDrawerOpen = () => {
@@ -147,7 +151,7 @@ export default function Dashboard() {
             <MenuIcon />
           </IconButton>
           <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-            Dashboard
+            Customer Order
           </Typography>
           <IconButton color="inherit">
             <Badge badgeContent={4} color="secondary">
@@ -171,20 +175,20 @@ export default function Dashboard() {
         <Divider />
         <List>
           <div>
+            <Link color="inherit" href="/">
             <ListItem button>
               <ListItemIcon>
                 <DashboardIcon />
               </ListItemIcon>
               <ListItemText primary="Dashboard" />
             </ListItem>
-            <Link color="inherit" href="/customer">
+            </Link>
             <ListItem button>
               <ListItemIcon>
                 <ShoppingCartIcon />
               </ListItemIcon>
               <ListItemText primary="Customer Order" />
             </ListItem>
-            </Link>
           </div>
         </List>
       </Drawer>
@@ -192,22 +196,10 @@ export default function Dashboard() {
         <div className={classes.appBarSpacer} />
         <Container maxWidth="lg" className={classes.container}>
           <Grid container spacing={3}>
-            {/* Chart */}
-            <Grid item xs={12} md={8} lg={9}>
-              <Paper className={fixedHeightPaper}>
-                <Chart />
-              </Paper>
-            </Grid>
-            {/* Recent Deposits */}
-            <Grid item xs={12} md={4} lg={3}>
-              <Paper className={fixedHeightPaper}>
-                <Deposits />
-              </Paper>
-            </Grid>
-            {/* Recent Orders */}
+            {/* Customer Orders */}
             <Grid item xs={12}>
               <Paper className={classes.paper}>
-                <Orders />
+                <CreateOrder />
               </Paper>
             </Grid>
           </Grid>
