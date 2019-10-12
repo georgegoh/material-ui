@@ -1,0 +1,305 @@
+{
+  "kind": "Template",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "dashboard-template"
+  },
+  "labels": {
+    "createdBy": "dashboard-template"
+  },
+  "parameters": [
+    {
+      "description": "The name for the dashboard application.",
+      "displayName": "Application Name",
+      "name": "DASHBOARD_APP_NAME",
+      "value": "dashboard",
+      "required": true
+    },
+    {
+      "description": "Custom hostname for dashboard application.  Leave blank for default hostname, e.g.: <application-name>.<project>.<default-domain-suffix>",
+      "displayName": "Application route",
+      "name": "APPLICATION_HOSTNAME"
+    },
+    {
+      "description": "Git source URI for application",
+      "displayName": "Git source repository",
+      "name": "GIT_URI",
+      "value": "https://github.com/georgegoh/material-ui-dashboard.git",
+      "required": true
+    },
+    {
+      "description": "Git branch/tag reference",
+      "displayName": "Git branch/tag reference",
+      "name": "GIT_REF",
+      "value": "master",
+      "required": true
+    },
+    {
+      "description": "API Backend",
+      "displayName": "API Backend",
+      "name": "API_URL",
+      "value": "http://flask-ms-mhademo.apps.ocp3.lab.spodon.com/",
+      "required": true
+    },
+    {
+      "description": "Github trigger secret",
+      "displayName": "GitHub Trigger",
+      "name": "GITHUB_TRIGGER_SECRET",
+      "from": "[a-zA-Z0-9]{8}",
+      "generate": "expression",
+      "required": true
+    },
+    {
+      "description": "Generic build trigger secret",
+      "displayName": "Generic Trigger",
+      "name": "GENERIC_TRIGGER_SECRET",
+      "from": "[a-zA-Z0-9]{8}",
+      "generate": "expression",
+      "required": true
+    }
+  ],
+  "objects": [
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "dashboard-settings",
+        "labels": {
+          "app": "dashboard",
+          "role": "config"
+        }
+      },
+      "data": {
+        "env": "REACT_APP_API_URL=${API_URL}"
+      }
+    },
+    {
+      "kind": "ImageStream",
+      "apiVersion": "image.openshift.io/v1",
+      "metadata": {
+        "name": "${DASHBOARD_APP_NAME}",
+        "labels": {
+          "app": "${DASHBOARD_APP_NAME}",
+          "role": "frontend"
+        }
+      },
+      "spec": {
+        "tags": [
+          {
+            "name": "latest"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "BuildConfig",
+      "apiVersion": "build.openshift.io/v1",
+      "metadata": {
+        "labels": {
+          "app": "${DASHBOARD_APP_NAME}",
+          "build": "${DASHBOARD_APP_NAME}",
+          "role": "frontend"
+        },
+        "name": "${DASHBOARD_APP_NAME}"
+      },
+      "spec": {
+        "triggers": [
+          {
+            "type": "GitHub",
+            "github": {
+              "secret": "${GITHUB_TRIGGER_SECRET}"
+            }
+          },
+          {
+            "type": "Generic",
+            "generic": {
+              "secret": "${GENERIC_TRIGGER_SECRET}"
+            }
+          },
+          {
+            "type": "ConfigChange"
+          },
+          {
+            "type": "ImageChange"
+          }
+        ],
+        "runPolicy": "Serial",
+        "source": {
+          "git": {
+            "uri": "${GIT_URI}",
+            "ref": "${GIT_REF}"
+          },
+          "type": "Git"
+        },
+        "strategy": {
+          "type": "Source",
+          "sourceStrategy": {
+            "from": {
+              "kind": "ImageStreamTag",
+              "namespace": "openshift",
+              "name": "nodejs:10"
+            }
+          }
+        },
+        "output": {
+          "to": {
+            "kind": "ImageStreamTag",
+            "name": "${DASHBOARD_APP_NAME}:latest"
+          }
+        },
+        "postCommit": {},
+        "resources": {}
+      },
+      "status": {
+        "lastVersion": 4
+      }
+    },
+    {
+      "apiVersion": "apps.openshift.io/v1",
+      "kind": "DeploymentConfig",
+      "metadata": {
+        "labels": {
+          "app": "${DASHBOARD_APP_NAME}"
+        },
+        "name": "${DASHBOARD_APP_NAME}"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "app": "${DASHBOARD_APP_NAME}",
+          "deploymentconfig": "${DASHBOARD_APP_NAME}"
+        },
+        "strategy": {
+          "activeDeadlineSeconds": 21600,
+          "resources": {},
+          "rollingParams": {
+            "intervalSeconds": 1,
+            "maxSurge": "25%",
+            "maxUnavailable": "25%",
+            "timeoutSeconds": 600,
+            "updatePeriodSeconds": 1
+          },
+          "type": "Rolling"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "${DASHBOARD_APP_NAME}",
+              "deploymentconfig": "${DASHBOARD_APP_NAME}"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "PORT",
+                    "value": "8080"
+                  }
+                ],
+                "image": "${DASHBOARD_APP_NAME}",
+                "imagePullPolicy": "Always",
+                "name": "${DASHBOARD_APP_NAME}",
+                "ports": [
+                  {
+                    "containerPort": 8080,
+                    "protocol": "TCP"
+                  }
+                ],
+                "resources": {},
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/opt/app-root/src/settings",
+                    "name": "dashboard-settings"
+                  }
+                ]
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "terminationGracePeriodSeconds": 30,
+            "volumes": [
+              {
+                "configMap": {
+                  "defaultMode": 420,
+                  "name": "dashboard-settings"
+                },
+                "name": "dashboard-settings"
+              }
+            ]
+          }
+        },
+        "test": false,
+        "triggers": [
+          {
+            "type": "ConfigChange"
+          },
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "${DASHBOARD_APP_NAME}"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "${DASHBOARD_APP_NAME}:latest"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "labels": {
+          "app": "${DASHBOARD_APP_NAME}"
+        },
+        "name": "${DASHBOARD_APP_NAME}"
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "8080-tcp",
+            "port": 8080,
+            "protocol": "TCP",
+            "targetPort": 8080
+          }
+        ],
+        "selector": {
+          "app": "${DASHBOARD_APP_NAME}",
+          "deploymentconfig": "${DASHBOARD_APP_NAME}"
+        },
+        "type": "ClusterIP",
+        "sessionAffinity": "None"
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "route.openshift.io/v1",
+      "metadata": {
+        "labels": {
+          "app": "${DASHBOARD_APP_NAME}"
+        },
+        "name": "${DASHBOARD_APP_NAME}"
+      },
+      "spec": {
+        "host": "${APPLICATION_HOSTNAME}",
+        "to": {
+          "kind": "Service",
+          "name": "${DASHBOARD_APP_NAME}",
+          "weight": 100
+        },
+        "port": {
+          "targetPort": "8080-tcp"
+        }
+      }
+    }
+  ]
+}
