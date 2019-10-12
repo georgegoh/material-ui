@@ -14,7 +14,8 @@ export default class Chart extends React.Component {
     }
     
     async updateData() {
-        const response = await fetch('http://routezjlizz04-workspaceccme5ifui0ekjbt1.apps.ocp3.lab.spodon.com/api/v1/stocklevels');
+        var url = process.env.REACT_APP_API_URL + 'api/v1/stocklevels';
+        const response = await fetch(url);
         const data = await response.json();
   
         this.setState({data: data});

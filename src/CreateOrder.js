@@ -21,12 +21,12 @@ export default class CreateOrder extends React.Component {
   }
 
     async componentDidMount() {
-        const response = await fetch('http://routezjlizz04-workspaceccme5ifui0ekjbt1.apps.ocp3.lab.spodon.com/api/v1/stocklevels');
+        var url = process.env.REACT_APP_API_URL + 'api/v1/stocklevels';
+        const response = await fetch(url);
         const data = await response.json();
   
         console.log("data", data);
         this.setState({data: data});
-        
     }
   
   handleClose() {
@@ -43,7 +43,7 @@ export default class CreateOrder extends React.Component {
   }
   
   order(){
-      var url = "http://routezjlizz04-workspaceccme5ifui0ekjbt1.apps.ocp3.lab.spodon.com/api/v1/decrement/" +  this.state.selectedSKU;
+      var url = process.env.REACT_APP_API_URL + 'api/v1/decrement/' +  this.state.selectedSKU;
       fetch(url);
   }
   
