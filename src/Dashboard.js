@@ -30,7 +30,7 @@ import Stock from './Stock';
 function Copyright() {
   return (
     <Typography variant="body2" color="textSecondary" align="center">
-      {'Copyright © '}
+      {'Copyright © Test'}
       <Link color="inherit" href="https://material-ui.com/">
         Your Website
       </Link>{' '}
